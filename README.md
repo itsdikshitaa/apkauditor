@@ -20,7 +20,7 @@ APK Auditor is a client-side web app for running OWASP MASVS-aligned static secu
 ### Clone the repository
 
 ```bash
-git clone <your-repo-url>.git
+git clone https://github.com/therayyanawaz/apkauditor.git
 cd apkauditor
 ```
 
