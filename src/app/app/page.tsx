@@ -507,27 +507,27 @@ function FindingCard({ finding }: { finding: Finding }) {
         <Card className="border-border/50 bg-card/50">
             <CardContent className="pt-4">
                 <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 min-w-0 space-y-2">
                         <div className="flex items-center gap-2 flex-wrap">
-                            <Badge className={`border ${severityClasses[finding.severity]} capitalize`}>
+                            <Badge className={`border ${severityClasses[finding.severity]} capitalize shrink-0`}>
                                 {finding.severity}
                             </Badge>
-                            <span className="font-mono text-xs text-muted-foreground">
+                            <span className="font-mono text-xs text-muted-foreground break-all max-w-full">
                                 {finding.id}
                             </span>
                             {finding.masvs && (
-                                <Badge variant="outline" className="font-mono text-xs">
+                                <Badge variant="outline" className="font-mono text-xs shrink-0">
                                     {finding.masvs}
                                 </Badge>
                             )}
                         </div>
-                        <h3 className="font-semibold">{finding.title}</h3>
+                        <h3 className="font-semibold break-words overflow-wrap-anywhere">{finding.title}</h3>
                         {finding.match && (
-                            <div className="rounded bg-secondary/50 px-2 py-1 font-mono text-xs text-muted-foreground break-all">
+                            <div className="rounded bg-secondary/50 px-2 py-1 font-mono text-xs text-muted-foreground break-all overflow-auto max-w-full">
                                 {finding.match}
                             </div>
                         )}
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground break-words">
                             {finding.description}
                         </p>
                         {finding.remediation && (
@@ -535,7 +535,7 @@ function FindingCard({ finding }: { finding: Finding }) {
                                 <div className="mb-1 text-xs font-medium text-primary">
                                     💡 Remediation
                                 </div>
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-xs text-muted-foreground break-words">
                                     {finding.remediation}
                                 </p>
                             </div>
@@ -553,19 +553,19 @@ function TrackerCard({ tracker }: { tracker: Tracker }) {
         <Card className="border-border/50 bg-card/50">
             <CardContent className="pt-4">
                 <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                            <h3 className="font-semibold">{tracker.name}</h3>
-                            <Badge variant="outline" className="text-xs">
+                    <div className="space-y-1 min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-semibold break-words">{tracker.name}</h3>
+                            <Badge variant="outline" className="text-xs shrink-0">
                                 {tracker.category}
                             </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">{tracker.company}</p>
+                        <p className="text-sm text-muted-foreground break-words">{tracker.company}</p>
                         <div className="flex flex-wrap gap-1 pt-1">
                             {tracker.packages.map((pkg) => (
                                 <code
                                     key={pkg}
-                                    className="rounded bg-secondary/50 px-1.5 py-0.5 font-mono text-xs text-muted-foreground"
+                                    className="rounded bg-secondary/50 px-1.5 py-0.5 font-mono text-xs text-muted-foreground break-all max-w-full"
                                 >
                                     {pkg}
                                 </code>

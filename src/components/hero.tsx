@@ -127,7 +127,7 @@ function ScannerPreview() {
                         <div className="h-3 w-3 rounded-full bg-green-500/80 hover:bg-green-500 transition-colors animate-pulse" />
                     </div>
                     <div className="flex-1 text-center text-xs text-muted-foreground">
-                        apkauditor.com/app
+                        apkauditor.vercel.app/app
                     </div>
                 </div>
 
