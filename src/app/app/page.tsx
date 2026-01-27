@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { Shield, Upload, FileText, Download, RefreshCw, Lock, ChevronLeft, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,33 +8,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { ApkParser } from "@/lib/apk-parser";
+import { CheckRunner, Finding, Tracker } from "@/lib/check-runner";
+import { generatePdfReport, downloadPdf } from "@/lib/pdf-generator";
 
 type ScanState = "idle" | "analyzing" | "complete" | "error";
-
-interface Finding {
-    id: string;
-    title: string;
-    description: string;
-    severity: "critical" | "high" | "medium" | "low" | "info";
-    masvs?: string;
-    remediation: string;
-    match?: string;
-}
-
-interface Tracker {
-    id: string;
-    name: string;
-    company: string;
-    category: string;
-    packages: string[];
-}
 
 interface ScanResults {
     appName: string;
     packageName: string;
     versionName: string;
-    minSdk: number;
-    targetSdk: number;
+    minSdk: string | number;
+    targetSdk: string | number;
     fileSize: string;
     permissions: Finding[];
     secrets: Finding[];
@@ -49,124 +34,17 @@ interface ScanResults {
     };
 }
 
-// Mock results for demo
-const MOCK_RESULTS: ScanResults = {
-    appName: "Example App",
-    packageName: "com.example.app",
-    versionName: "1.2.3",
-    minSdk: 21,
-    targetSdk: 34,
-    fileSize: "24.5 MB",
-    permissions: [
-        {
-            id: "PERM001",
-            title: "Fine Location Access",
-            description: "App requests ACCESS_FINE_LOCATION permission for precise GPS tracking.",
-            severity: "high",
-            masvs: "MASVS-PRIVACY-1",
-            remediation: "Ensure location access is necessary. Request only when needed with clear user explanation.",
-            match: "android.permission.ACCESS_FINE_LOCATION",
-        },
-        {
-            id: "PERM002",
-            title: "Camera Access",
-            description: "App requests CAMERA permission to capture photos or video.",
-            severity: "medium",
-            masvs: "MASVS-PRIVACY-1",
-            remediation: "Request camera permission only when the feature is about to be used.",
-            match: "android.permission.CAMERA",
-        },
-        {
-            id: "PERM003",
-            title: "Internet Access",
-            description: "App requests INTERNET permission for network connectivity.",
-            severity: "info",
-            masvs: "MASVS-NETWORK-1",
-            remediation: "Normal permission. Ensure all network traffic uses HTTPS.",
-            match: "android.permission.INTERNET",
-        },
-    ],
-    secrets: [
-        {
-            id: "SEC001",
-            title: "Google API Key Detected",
-            description: "Hardcoded Google API key found in application resources.",
-            severity: "high",
-            masvs: "MASVS-STORAGE-1",
-            remediation: "Remove hardcoded key. Use Android Keystore or fetch from secure backend.",
-            match: "AIzaSyB***************",
-        },
-        {
-            id: "SEC002",
-            title: "High Entropy String",
-            description: "High entropy string detected (entropy: 4.8). May be a secret or token.",
-            severity: "medium",
-            masvs: "MASVS-STORAGE-1",
-            remediation: "Review this string. If it's a secret, move to secure storage.",
-            match: "xK9mN2pLqR8sT5vW...",
-        },
-    ],
-    trackers: [
-        {
-            id: "TRACK001",
-            name: "Firebase Analytics",
-            company: "Google",
-            category: "Analytics",
-            packages: ["com.google.firebase.analytics"],
-        },
-        {
-            id: "TRACK002",
-            name: "Crashlytics",
-            company: "Google",
-            category: "Crash Reporting",
-            packages: ["com.google.firebase.crashlytics"],
-        },
-        {
-            id: "TRACK003",
-            name: "Facebook SDK",
-            company: "Meta",
-            category: "Social/Ads",
-            packages: ["com.facebook.sdk"],
-        },
-    ],
-    manifest: [
-        {
-            id: "MAN001",
-            title: "Backup Allowed",
-            description: "android:allowBackup is enabled, allowing app data to be backed up.",
-            severity: "high",
-            masvs: "MASVS-STORAGE-2",
-            remediation: "Set android:allowBackup=\"false\" to prevent data extraction via ADB backup.",
-            match: "android:allowBackup=\"true\"",
-        },
-        {
-            id: "MAN002",
-            title: "Exported Activity",
-            description: "MainActivity is exported without permission protection.",
-            severity: "medium",
-            masvs: "MASVS-PLATFORM-1",
-            remediation: "Set android:exported=\"false\" or add android:permission requirement.",
-            match: "MainActivity (exported=true)",
-        },
-    ],
-    summary: {
-        critical: 0,
-        high: 3,
-        medium: 3,
-        low: 0,
-        info: 1,
-    },
-};
-
 export default function ScannerApp() {
     const [scanState, setScanState] = useState<ScanState>("idle");
     const [progress, setProgress] = useState(0);
+    const [progressMessage, setProgressMessage] = useState("");
     const [fileName, setFileName] = useState("");
     const [results, setResults] = useState<ScanResults | null>(null);
     const [dragOver, setDragOver] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleFile = useCallback(async (file: File) => {
-        if (!file.name.endsWith(".apk")) {
+        if (!file.name.toLowerCase().endsWith(".apk")) {
             alert("Please select an APK file");
             return;
         }
@@ -174,25 +52,40 @@ export default function ScannerApp() {
         setFileName(file.name);
         setScanState("analyzing");
         setProgress(0);
+        setError(null);
 
-        // Simulate analysis progress
-        const steps = [
-            { progress: 15, delay: 500 },
-            { progress: 35, delay: 800 },
-            { progress: 55, delay: 600 },
-            { progress: 75, delay: 700 },
-            { progress: 90, delay: 500 },
-            { progress: 100, delay: 300 },
-        ];
+        try {
+            // Initialize parser
+            const parser = new ApkParser(file, (p) => {
+                setProgress(p.progress);
+                setProgressMessage(p.message);
+            });
 
-        for (const step of steps) {
-            await new Promise((resolve) => setTimeout(resolve, step.delay));
-            setProgress(step.progress);
+            // Parse APK
+            const parseResult = await parser.parse();
+
+            // Run security checks
+            const runner = new CheckRunner(parseResult);
+            const checkResults = await runner.runAllChecks();
+
+            // Construct final results
+            const finalResults: ScanResults = {
+                appName: parseResult.manifest?.application?.label || "Unknown App",
+                packageName: parseResult.manifest?.package || "Unknown Package",
+                versionName: parseResult.manifest?.versionName || "Unknown",
+                minSdk: parseResult.manifest?.minSdkVersion || "N/A",
+                targetSdk: parseResult.manifest?.targetSdkVersion || "N/A",
+                fileSize: parser.formatSize(file.size),
+                ...checkResults
+            };
+
+            setResults(finalResults);
+            setScanState("complete");
+        } catch (err: any) {
+            console.error("Analysis failed:", err);
+            setError(err.message || "Failed to analyze APK");
+            setScanState("error");
         }
-
-        // Show results
-        setResults(MOCK_RESULTS);
-        setScanState("complete");
     }, []);
 
     const handleDrop = useCallback(
@@ -210,6 +103,29 @@ export default function ScannerApp() {
         setProgress(0);
         setFileName("");
         setResults(null);
+        setError(null);
+    };
+
+    const handleExportPdf = () => {
+        if (!results) return;
+        const doc = generatePdfReport(
+            {
+                appName: results.appName,
+                packageName: results.packageName,
+                versionName: results.versionName,
+                minSdk: results.minSdk,
+                targetSdk: results.targetSdk,
+                fileSize: results.fileSize,
+            },
+            {
+                permissions: results.permissions,
+                secrets: results.secrets,
+                trackers: results.trackers,
+                manifest: results.manifest,
+                summary: results.summary,
+            }
+        );
+        downloadPdf(doc, `${results.packageName}.pdf`);
     };
 
     return (
@@ -227,7 +143,7 @@ export default function ScannerApp() {
                         <Separator orientation="vertical" className="h-6" />
                         <div className="flex items-center gap-2">
                             <Shield className="h-5 w-5 text-primary" />
-                            <span className="font-semibold">APK Scanner</span>
+                            <span className="font-semibold">APK Auditor</span>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -267,15 +183,23 @@ export default function ScannerApp() {
                     )}
 
                     {scanState === "analyzing" && (
-                        <AnalyzingPanel fileName={fileName} progress={progress} />
+                        <AnalyzingPanel
+                            fileName={fileName}
+                            progress={progress}
+                            message={progressMessage}
+                        />
                     )}
 
                     {scanState === "complete" && results && (
-                        <ResultsPanel results={results} onReset={handleReset} />
+                        <ResultsPanel
+                            results={results}
+                            onReset={handleReset}
+                            onExport={handleExportPdf}
+                        />
                     )}
 
                     {scanState === "error" && (
-                        <ErrorPanel onRetry={handleReset} />
+                        <ErrorPanel error={error} onRetry={handleReset} />
                     )}
                 </div>
             </main>
@@ -297,6 +221,11 @@ function UploadPanel({
     onDragOver: (e: React.DragEvent) => void;
     onDragLeave: () => void;
 }) {
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleClick = () => {
+        fileInputRef.current?.click();
+    };
     return (
         <div className="mx-auto max-w-2xl">
             <div className="text-center">
@@ -307,33 +236,32 @@ function UploadPanel({
             </div>
 
             <div
-                className={`dropzone mt-8 rounded-2xl border-2 border-dashed p-12 text-center transition-all ${dragOver
-                        ? "border-primary bg-primary/5"
-                        : "border-border/50 hover:border-primary/30"
+                className={`dropzone mt-8 rounded-2xl border-2 border-dashed p-12 text-center transition-all cursor-pointer ${dragOver
+                    ? "border-primary bg-primary/5"
+                    : "border-border/50 hover:border-primary/30"
                     }`}
                 onDrop={onDrop}
                 onDragOver={onDragOver}
                 onDragLeave={onDragLeave}
+                onClick={handleClick}
             >
                 <input
+                    ref={fileInputRef}
                     type="file"
                     accept=".apk"
                     className="hidden"
-                    id="file-input"
                     onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) onFileSelect(file);
                     }}
                 />
-                <label htmlFor="file-input" className="cursor-pointer">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
-                        <Upload className="h-7 w-7 text-primary" />
-                    </div>
-                    <p className="text-lg font-medium">Drop APK here</p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        or click to browse (max 200MB)
-                    </p>
-                </label>
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+                    <Upload className="h-7 w-7 text-primary" />
+                </div>
+                <p className="text-lg font-medium">Drop APK here</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                    or click to browse (max 200MB)
+                </p>
             </div>
 
             {/* Privacy reminder */}
@@ -359,19 +287,12 @@ function UploadPanel({
 function AnalyzingPanel({
     fileName,
     progress,
+    message
 }: {
     fileName: string;
     progress: number;
+    message: string;
 }) {
-    const getStatusText = () => {
-        if (progress < 20) return "Extracting APK contents...";
-        if (progress < 40) return "Parsing AndroidManifest.xml...";
-        if (progress < 60) return "Analyzing permissions...";
-        if (progress < 80) return "Scanning for secrets...";
-        if (progress < 95) return "Detecting trackers...";
-        return "Finalizing report...";
-    };
-
     return (
         <div className="mx-auto max-w-md">
             <Card className="border-border/50 bg-card/50">
@@ -390,8 +311,8 @@ function AnalyzingPanel({
                             />
                         </div>
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>{getStatusText()}</span>
-                            <span className="font-mono">{progress}%</span>
+                            <span>{message || "Processing..."}</span>
+                            <span className="font-mono">{Math.round(progress)}%</span>
                         </div>
                     </div>
                     <p className="text-center text-xs text-muted-foreground">
@@ -407,9 +328,11 @@ function AnalyzingPanel({
 function ResultsPanel({
     results,
     onReset,
+    onExport,
 }: {
     results: ScanResults;
     onReset: () => void;
+    onExport: () => void;
 }) {
     return (
         <div className="space-y-6">
@@ -435,7 +358,7 @@ function ResultsPanel({
                         <RefreshCw className="mr-1.5 h-4 w-4" />
                         New Scan
                     </Button>
-                    <Button size="sm">
+                    <Button size="sm" onClick={onExport}>
                         <Download className="mr-1.5 h-4 w-4" />
                         Export PDF
                     </Button>
@@ -473,7 +396,7 @@ function ResultsPanel({
 
             {/* Tabs */}
             <Tabs defaultValue="permissions" className="w-full">
-                <TabsList className="w-full justify-start">
+                <TabsList className="w-full justify-start overflow-x-auto">
                     <TabsTrigger value="permissions" className="gap-1.5">
                         Permissions
                         <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
@@ -501,27 +424,43 @@ function ResultsPanel({
                 </TabsList>
 
                 <TabsContent value="permissions" className="mt-4 space-y-3">
-                    {results.permissions.map((finding) => (
-                        <FindingCard key={finding.id} finding={finding} />
-                    ))}
+                    {results.permissions.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">No dangerous permissions found.</div>
+                    ) : (
+                        results.permissions.map((finding) => (
+                            <FindingCard key={finding.id} finding={finding} />
+                        ))
+                    )}
                 </TabsContent>
 
                 <TabsContent value="secrets" className="mt-4 space-y-3">
-                    {results.secrets.map((finding) => (
-                        <FindingCard key={finding.id} finding={finding} />
-                    ))}
+                    {results.secrets.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">No secrets detected.</div>
+                    ) : (
+                        results.secrets.map((finding, idx) => (
+                            <FindingCard key={`${finding.id}-${idx}`} finding={finding} />
+                        ))
+                    )}
                 </TabsContent>
 
                 <TabsContent value="trackers" className="mt-4 space-y-3">
-                    {results.trackers.map((tracker) => (
-                        <TrackerCard key={tracker.id} tracker={tracker} />
-                    ))}
+                    {results.trackers.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">No trackers detected.</div>
+                    ) : (
+                        results.trackers.map((tracker, idx) => (
+                            <TrackerCard key={`${tracker.id}-${idx}`} tracker={tracker} />
+                        ))
+                    )}
                 </TabsContent>
 
                 <TabsContent value="manifest" className="mt-4 space-y-3">
-                    {results.manifest.map((finding) => (
-                        <FindingCard key={finding.id} finding={finding} />
-                    ))}
+                    {results.manifest.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">No manifest issues found.</div>
+                    ) : (
+                        results.manifest.map((finding, idx) => (
+                            <FindingCard key={`${finding.id}-${idx}`} finding={finding} />
+                        ))
+                    )}
                 </TabsContent>
             </Tabs>
         </div>
@@ -569,8 +508,8 @@ function FindingCard({ finding }: { finding: Finding }) {
             <CardContent className="pt-4">
                 <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 space-y-2">
-                        <div className="flex items-center gap-2">
-                            <Badge className={`border ${severityClasses[finding.severity]}`}>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <Badge className={`border ${severityClasses[finding.severity]} capitalize`}>
                                 {finding.severity}
                             </Badge>
                             <span className="font-mono text-xs text-muted-foreground">
@@ -584,21 +523,23 @@ function FindingCard({ finding }: { finding: Finding }) {
                         </div>
                         <h3 className="font-semibold">{finding.title}</h3>
                         {finding.match && (
-                            <code className="block rounded bg-secondary/50 px-2 py-1 font-mono text-xs text-muted-foreground">
+                            <div className="rounded bg-secondary/50 px-2 py-1 font-mono text-xs text-muted-foreground break-all">
                                 {finding.match}
-                            </code>
+                            </div>
                         )}
                         <p className="text-sm text-muted-foreground">
                             {finding.description}
                         </p>
-                        <div className="rounded-lg bg-primary/5 p-3">
-                            <div className="mb-1 text-xs font-medium text-primary">
-                                💡 Remediation
+                        {finding.remediation && (
+                            <div className="rounded-lg bg-primary/5 p-3">
+                                <div className="mb-1 text-xs font-medium text-primary">
+                                    💡 Remediation
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    {finding.remediation}
+                                </p>
                             </div>
-                            <p className="text-xs text-muted-foreground">
-                                {finding.remediation}
-                            </p>
-                        </div>
+                        )}
                     </div>
                 </div>
             </CardContent>
@@ -638,7 +579,7 @@ function TrackerCard({ tracker }: { tracker: Tracker }) {
 }
 
 // Error Panel Component
-function ErrorPanel({ onRetry }: { onRetry: () => void }) {
+function ErrorPanel({ error, onRetry }: { error: string | null, onRetry: () => void }) {
     return (
         <div className="mx-auto max-w-md text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/10">
@@ -646,7 +587,7 @@ function ErrorPanel({ onRetry }: { onRetry: () => void }) {
             </div>
             <h2 className="text-xl font-bold">Analysis Failed</h2>
             <p className="mt-2 text-muted-foreground">
-                Unable to process the APK file. Please check the file and try again.
+                {error || "Unable to process the APK file. Please check the file and try again."}
             </p>
             <Button onClick={onRetry} className="mt-6">
                 Try Again

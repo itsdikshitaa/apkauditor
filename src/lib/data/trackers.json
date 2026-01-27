@@ -1,0 +1,265 @@
+{
+    "trackers": [
+        {
+            "id": "google_firebase",
+            "name": "Firebase",
+            "company": "Google",
+            "category": "Analytics",
+            "packages": [
+                "com.google.firebase",
+                "com.google.firebase.analytics",
+                "com.google.firebase.crashlytics",
+                "com.google.firebase.messaging",
+                "com.google.firebase.perf"
+            ],
+            "website": "https://firebase.google.com"
+        },
+        {
+            "id": "google_analytics",
+            "name": "Google Analytics",
+            "company": "Google",
+            "category": "Analytics",
+            "packages": [
+                "com.google.android.gms.analytics",
+                "com.google.android.gms.tagmanager"
+            ],
+            "website": "https://analytics.google.com"
+        },
+        {
+            "id": "facebook",
+            "name": "Facebook SDK",
+            "company": "Meta",
+            "category": "Social/Ads",
+            "packages": [
+                "com.facebook.sdk",
+                "com.facebook.appevents",
+                "com.facebook.ads",
+                "com.facebook.share"
+            ],
+            "website": "https://developers.facebook.com"
+        },
+        {
+            "id": "appsflyer",
+            "name": "AppsFlyer",
+            "company": "AppsFlyer",
+            "category": "Attribution",
+            "packages": [
+                "com.appsflyer"
+            ],
+            "website": "https://www.appsflyer.com"
+        },
+        {
+            "id": "adjust",
+            "name": "Adjust",
+            "company": "Adjust",
+            "category": "Attribution",
+            "packages": [
+                "com.adjust.sdk"
+            ],
+            "website": "https://www.adjust.com"
+        },
+        {
+            "id": "branch",
+            "name": "Branch",
+            "company": "Branch",
+            "category": "Attribution",
+            "packages": [
+                "io.branch"
+            ],
+            "website": "https://branch.io"
+        },
+        {
+            "id": "mixpanel",
+            "name": "Mixpanel",
+            "company": "Mixpanel",
+            "category": "Analytics",
+            "packages": [
+                "com.mixpanel"
+            ],
+            "website": "https://mixpanel.com"
+        },
+        {
+            "id": "amplitude",
+            "name": "Amplitude",
+            "company": "Amplitude",
+            "category": "Analytics",
+            "packages": [
+                "com.amplitude"
+            ],
+            "website": "https://amplitude.com"
+        },
+        {
+            "id": "segment",
+            "name": "Segment",
+            "company": "Twilio",
+            "category": "Analytics",
+            "packages": [
+                "com.segment.analytics"
+            ],
+            "website": "https://segment.com"
+        },
+        {
+            "id": "google_admob",
+            "name": "AdMob",
+            "company": "Google",
+            "category": "Advertising",
+            "packages": [
+                "com.google.android.gms.ads",
+                "com.google.android.gms.ads"
+            ],
+            "website": "https://admob.google.com"
+        },
+        {
+            "id": "unity_ads",
+            "name": "Unity Ads",
+            "company": "Unity",
+            "category": "Advertising",
+            "packages": [
+                "com.unity3d.ads",
+                "com.unity3d.services"
+            ],
+            "website": "https://unity.com/solutions/unity-ads"
+        },
+        {
+            "id": "ironsource",
+            "name": "ironSource",
+            "company": "Unity",
+            "category": "Advertising",
+            "packages": [
+                "com.ironsource"
+            ],
+            "website": "https://www.ironsrc.com"
+        },
+        {
+            "id": "applovin",
+            "name": "AppLovin",
+            "company": "AppLovin",
+            "category": "Advertising",
+            "packages": [
+                "com.applovin"
+            ],
+            "website": "https://www.applovin.com"
+        },
+        {
+            "id": "mopub",
+            "name": "MoPub",
+            "company": "Twitter",
+            "category": "Advertising",
+            "packages": [
+                "com.mopub"
+            ],
+            "website": "https://www.mopub.com"
+        },
+        {
+            "id": "vungle",
+            "name": "Vungle",
+            "company": "Vungle",
+            "category": "Advertising",
+            "packages": [
+                "com.vungle"
+            ],
+            "website": "https://vungle.com"
+        },
+        {
+            "id": "sentry",
+            "name": "Sentry",
+            "company": "Sentry",
+            "category": "Crash Reporting",
+            "packages": [
+                "io.sentry"
+            ],
+            "website": "https://sentry.io"
+        },
+        {
+            "id": "bugsnag",
+            "name": "Bugsnag",
+            "company": "Bugsnag",
+            "category": "Crash Reporting",
+            "packages": [
+                "com.bugsnag"
+            ],
+            "website": "https://www.bugsnag.com"
+        },
+        {
+            "id": "instabug",
+            "name": "Instabug",
+            "company": "Instabug",
+            "category": "Crash Reporting",
+            "packages": [
+                "com.instabug"
+            ],
+            "website": "https://instabug.com"
+        },
+        {
+            "id": "clevertap",
+            "name": "CleverTap",
+            "company": "CleverTap",
+            "category": "Marketing",
+            "packages": [
+                "com.clevertap"
+            ],
+            "website": "https://clevertap.com"
+        },
+        {
+            "id": "braze",
+            "name": "Braze",
+            "company": "Braze",
+            "category": "Marketing",
+            "packages": [
+                "com.braze",
+                "com.appboy"
+            ],
+            "website": "https://www.braze.com"
+        },
+        {
+            "id": "onesignal",
+            "name": "OneSignal",
+            "company": "OneSignal",
+            "category": "Push Notifications",
+            "packages": [
+                "com.onesignal"
+            ],
+            "website": "https://onesignal.com"
+        },
+        {
+            "id": "urbanairship",
+            "name": "Airship",
+            "company": "Airship",
+            "category": "Push Notifications",
+            "packages": [
+                "com.urbanairship"
+            ],
+            "website": "https://www.airship.com"
+        },
+        {
+            "id": "flurry",
+            "name": "Flurry",
+            "company": "Yahoo",
+            "category": "Analytics",
+            "packages": [
+                "com.flurry"
+            ],
+            "website": "https://www.flurry.com"
+        },
+        {
+            "id": "chartboost",
+            "name": "Chartboost",
+            "company": "Chartboost",
+            "category": "Advertising",
+            "packages": [
+                "com.chartboost"
+            ],
+            "website": "https://www.chartboost.com"
+        },
+        {
+            "id": "adcolony",
+            "name": "AdColony",
+            "company": "AdColony",
+            "category": "Advertising",
+            "packages": [
+                "com.adcolony"
+            ],
+            "website": "https://www.adcolony.com"
+        }
+    ]
+}
