@@ -4,7 +4,7 @@ APK Auditor is a client-side web app for running OWASP MASVS-aligned static secu
 
 ## Features
 
-- 34 MASVS v2.1-aligned static security checks for Android APKs.
+- 31 MASVS v2.1-aligned static security checks for Android APKs.
 - Detects dangerous permissions, hardcoded secrets, and embedded tracker SDKs.
 - Flags risky manifest settings like debuggable builds, cleartext traffic, and exported components.
 - Generates downloadable PDF security reports with severity summaries.
@@ -20,7 +20,7 @@ APK Auditor is a client-side web app for running OWASP MASVS-aligned static secu
 ### Clone the repository
 
 ```bash
-git clone https://github.com/therayyanawaz/apkauditor.git
+git clone https://github.com/itsdikshitaa/apkauditor.git
 cd apkauditor
 ```
 
