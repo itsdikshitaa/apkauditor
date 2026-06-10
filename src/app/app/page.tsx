@@ -81,9 +81,9 @@ export default function ScannerApp() {
 
             setResults(finalResults);
             setScanState("complete");
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Analysis failed:", err);
-            setError(err.message || "Failed to analyze APK");
+            setError(err instanceof Error ? err.message : "Failed to analyze APK");
             setScanState("error");
         }
     }, []);

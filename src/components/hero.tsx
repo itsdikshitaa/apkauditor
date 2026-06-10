@@ -27,7 +27,7 @@ export function Hero() {
                         </h1>
 
                         <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-                            34 security checks running 100% in your browser. Detect dangerous permissions,
+                            31 security checks running 100% in your browser. Detect dangerous permissions,
                             hardcoded secrets, tracker SDKs, and manifest issues—without uploading anything.
                         </p>
 
@@ -71,18 +71,20 @@ export function Hero() {
     );
 }
 
+const STATUS_MESSAGES = [
+    "Extracting manifest...",
+    "Analyzing permissions...",
+    "Scanning for secrets...",
+    "Detecting trackers...",
+    "Checking configurations...",
+] as const;
+
 function ScannerPreview() {
     const [progress, setProgress] = useState(0);
     const [activeTab, setActiveTab] = useState(0);
     const [statusIndex, setStatusIndex] = useState(0);
 
-    const statusMessages = [
-        "Extracting manifest...",
-        "Analyzing permissions...",
-        "Scanning for secrets...",
-        "Detecting trackers...",
-        "Checking configurations..."
-    ];
+    const statusMessages = STATUS_MESSAGES;
 
     // Animated progress bar
     useEffect(() => {
@@ -98,7 +100,7 @@ function ScannerPreview() {
     // Cycle through status messages
     useEffect(() => {
         const interval = setInterval(() => {
-            setStatusIndex(prev => (prev + 1) % statusMessages.length);
+            setStatusIndex((prev) => (prev + 1) % STATUS_MESSAGES.length);
         }, 2000);
         return () => clearInterval(interval);
     }, []);

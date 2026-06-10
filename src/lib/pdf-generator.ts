@@ -4,7 +4,7 @@
  */
 
 import { jsPDF } from "jspdf";
-import { CheckResults, Finding } from "./check-runner";
+import { CheckResults } from "./check-runner";
 
 // --- Design Tokens ---
 

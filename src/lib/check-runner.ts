@@ -272,7 +272,7 @@ export class CheckRunner {
                         }
                     }
                 }
-            } catch (e) {
+            } catch {
                 // Invalid regex, skip
             }
         }

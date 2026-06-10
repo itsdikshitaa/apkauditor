@@ -158,7 +158,7 @@ export class ApkParser {
         try {
             // Try to parse as binary AXML
             this.manifestXml = parseAXML(manifestBuffer);
-        } catch (e: any) {
+        } catch (error: unknown) {
             // Fallback: try as plain text (unlikely but possible)
             try {
                 const textDecoder = new TextDecoder("utf-8");
@@ -168,8 +168,9 @@ export class ApkParser {
                 if (!this.manifestXml.includes("<?xml")) {
                     throw new Error("Invalid manifest format");
                 }
-            } catch (e2) {
-                throw new Error("Failed to parse AndroidManifest.xml: " + e.message);
+            } catch {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                throw new Error("Failed to parse AndroidManifest.xml: " + errorMessage);
             }
         }
 
@@ -226,12 +227,12 @@ export class ApkParser {
 
                 // Extract strings using regex
                 this.extractStringsFromContent(content, strings);
-            } catch (e) {
+            } catch {
                 // Skip files that can't be read
             }
 
             processedCount++;
-            if (processedCount % 10 === 0) {
+            if (processedCount % 10 === 0 && targetFiles.length > 0) {
                 this.onProgress({
                     step: "secrets",
                     progress: 60 + (processedCount / targetFiles.length) * 15,
@@ -250,7 +251,7 @@ export class ApkParser {
 
                 const buffer = await dexFile.async("arraybuffer");
                 this.extractStringsFromDex(buffer, strings);
-            } catch (e) {
+            } catch {
                 // Skip on error
             }
         }
@@ -327,6 +328,14 @@ export class ApkParser {
                 }
                 currentString = "";
             }
+        }
+
+        if (
+            currentString.length >= minLength &&
+            currentString.length <= MAX_STRING_LENGTH &&
+            this.isInterestingString(currentString)
+        ) {
+            strings.add(currentString);
         }
     }
 
