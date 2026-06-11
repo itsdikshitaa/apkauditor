@@ -213,7 +213,7 @@ export class CheckRunner {
 
             if (this.isHighEntropyString(str) && !foundSecrets.has(str)) {
                 const entropy = this.calculateEntropy(str);
-                if (entropy > 4.5 && str.length >= 20 && str.length <= 100) {
+                if (entropy > 4.5 && str.length >= 16 && str.length <= 200) {
                     foundSecrets.add(str);
                     this.results.secrets.push({
                         id: "SEC_ENTROPY",
@@ -550,6 +550,9 @@ export class CheckRunner {
         if (/^[a-z]+$/i.test(str)) return false; // All letters
         if (/^\d+$/.test(str)) return false; // All numbers
         if (/^[A-F0-9]+$/i.test(str)) return false; // Hex only (might be color codes)
+
+        // Flag strings with known secret prefixes (likely API keys/tokens)
+        if (/^(sk[-_])|(pk[-_])|(AKIA)|(eyJ)/.test(str)) return true;
 
         return true;
     }
