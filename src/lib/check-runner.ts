@@ -525,6 +525,7 @@ export class CheckRunner {
         // Must be mostly alphanumeric with some special chars
         if (!/^[A-Za-z0-9+/=_\-]{16,}$/.test(str)) return false;
 
+        return true;
         // Skip common false positives
         if (/^[a-z]+$/i.test(str)) return false; // All letters
         if (/^\d+$/.test(str)) return false; // All numbers
