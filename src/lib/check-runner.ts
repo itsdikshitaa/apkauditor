@@ -40,7 +40,8 @@ const DANGEROUS_PERMISSIONS = [
     "android.permission.ACCESS_MEDIA_LOCATION",
 ];
 
-export type { Finding, CheckResults } from "./types";
+import { type Finding, type CheckResults } from "./types";
+export type { Finding, CheckResults };
 
 // Tracker stays local for backward compatibility
 export interface Tracker {
