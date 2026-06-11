@@ -530,10 +530,6 @@ export class CheckRunner {
         if (/^\d+$/.test(str)) return false; // All numbers
         if (/^[A-F0-9]+$/i.test(str)) return false; // Hex only (might be color codes)
 
-        // Flag strings with known secret prefixes (likely API keys/tokens)
-        if (/^(sk[-_])|(pk[-_])|(AKIA)|(eyJ)/.test(str)) return true;
-
-        return true;
     }
 
     /**

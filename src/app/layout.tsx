@@ -29,6 +29,13 @@ export const metadata: Metadata = {
     "Static Analysis",
   ],
   authors: [{ name: "APK Auditor" }],
+  manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.svg", sizes: "192x192", type: "image/svg+xml" },
+      { url: "/icons/icon-512.svg", sizes: "512x512", type: "image/svg+xml" },
+    ],
+  },
   openGraph: {
     title: "APK Auditor | Privacy-First Android Security Scanner",
     description:
@@ -48,6 +55,17 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         {children}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ("serviceWorker" in navigator) {
+                window.addEventListener("load", () => {
+                  navigator.serviceWorker.register("/sw.js");
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
