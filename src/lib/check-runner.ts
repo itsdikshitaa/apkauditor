@@ -40,17 +40,9 @@ const DANGEROUS_PERMISSIONS = [
     "android.permission.ACCESS_MEDIA_LOCATION",
 ];
 
-export interface Finding {
-    id: string;
-    title: string;
-    description: string;
-    severity: "critical" | "high" | "medium" | "low" | "info";
-    masvs?: string;
-    remediation?: string;
-    match?: string;
-    source?: string;
-}
+export type { Finding, CheckResults } from "./types";
 
+// Tracker stays local for backward compatibility
 export interface Tracker {
     id: string;
     name: string;
@@ -59,20 +51,6 @@ export interface Tracker {
     packages: string[];
     website?: string;
     detectedPackage?: string;
-}
-
-export interface CheckResults {
-    permissions: Finding[];
-    secrets: Finding[];
-    trackers: Tracker[];
-    manifest: Finding[];
-    summary: {
-        critical: number;
-        high: number;
-        medium: number;
-        low: number;
-        info: number;
-    };
 }
 
 /**
