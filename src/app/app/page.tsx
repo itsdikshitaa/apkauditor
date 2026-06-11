@@ -10,30 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ApkParser } from "@/lib/apk-parser";
-import { CheckRunner, Finding, Tracker } from "@/lib/check-runner";
+import { CheckRunner } from "@/lib/check-runner";
+import { type Finding, type Tracker, type ScanResults, type ScanState } from "@/lib/types";
 import { generatePdfReport, downloadPdf } from "@/lib/pdf-generator";
 
-type ScanState = "idle" | "analyzing" | "complete" | "error";
 
-interface ScanResults {
-    appName: string;
-    packageName: string;
-    versionName: string;
-    minSdk: string | number;
-    targetSdk: string | number;
-    fileSize: string;
-    permissions: Finding[];
-    secrets: Finding[];
-    trackers: Tracker[];
-    manifest: Finding[];
-    summary: {
-        critical: number;
-        high: number;
-        medium: number;
-        low: number;
-        info: number;
-    };
-}
 
 export default function ScannerApp() {
     const [scanState, setScanState] = useState<ScanState>("idle");
