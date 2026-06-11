@@ -1,4 +1,5 @@
 "use client";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 import { useState, useCallback, useRef } from "react";
 import Link from "next/link";
@@ -129,6 +130,7 @@ export default function ScannerApp() {
     };
 
     return (
+        <ErrorBoundary key={scanState + (results?.packageName || "")}>
         <div className="flex min-h-screen flex-col bg-background">
             {/* Header */}
             <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
@@ -201,9 +203,11 @@ export default function ScannerApp() {
                     {scanState === "error" && (
                         <ErrorPanel error={error} onRetry={handleReset} />
                     )}
-                </div>
+                
+            </div>
             </main>
         </div>
+        </ErrorBoundary>
     );
 }
 
